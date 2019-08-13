@@ -1,0 +1,4 @@
+keys.yaml
+data/*
+spreads_json/*
+__pycache__/*
