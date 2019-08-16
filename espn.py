@@ -1,5 +1,7 @@
 import os
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 from datetime import datetime
 from argparse import ArgumentParser
 import pandas as pd
@@ -9,10 +11,15 @@ log.basicConfig(format='%(asctime)s | %(levelname)s | %(message)s',
                 level=log.DEBUG)
 
 class ESPN():
-    def __init__(self, week):
+    def __init__(self, week, url):
         self.week = week
-        os.system("phantomjs scrape_espn.js")
-        self.soup = BeautifulSoup(open("espn.html"), "html.parser")
+        self.url = url
+        options = Options()
+        options.headless = True
+        browser = webdriver.Firefox(options=options)
+        browser.get(self.url)
+        html = browser.page_source
+        self.soup = BeautifulSoup(html, 'lxml')
         self.game_dat = self.soup.findAll("article", {"class": "scoreboard football pregame js-show"})
 
     def get_games(self):
@@ -50,5 +57,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("-w", "--week",
         help="Week to pull ESPN data for")
+    parser.add_argument("-u", "--url",
+        help="URL to pull data against")
     args = parser.parse_args()
-    ESPN(args.week).get_games()
+    ESPN(args.week, args.url).get_games()
