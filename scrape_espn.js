@@ -11,5 +11,5 @@ function just_wait() {
     setTimeout(function() {
                fs.write('espn.html', page.content, 'w');
             phantom.exit();
-    }, 7000);
+    }, 10000);
 }

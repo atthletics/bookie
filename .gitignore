@@ -2,3 +2,4 @@ keys.yaml
 data/*
 spreads_json/*
 __pycache__/*
+scratch.py
