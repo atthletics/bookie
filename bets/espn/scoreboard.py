@@ -101,10 +101,15 @@ class Scoreboard():
             dict_writer.writeheader()
             dict_writer.writerows(self.spreads)
 
-    def main(self):
+    def main(self, selector):
         self.get_game_soup()
-        self.parse_game_data()
-        self.parse_spread_data()
+        if selector.lower() == 'games':
+            self.parse_game_data()
+        elif selector.lower() == 'spreads':
+            self.parse_spread_data()
+        else:
+            self.parse_game_data()
+            self.parse_spread_data()
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -112,5 +117,8 @@ if __name__ == '__main__':
         help="Year to pull ESPN data for")
     parser.add_argument("-w", "--week",
         help="Week to pull ESPN data for")
+    parser.add_argument('-s', "--selector",
+        help="Select games or spreads",
+        default='Both')
     args = parser.parse_args()
-    Scoreboard(args.year, args.week).main()
+    Scoreboard(args.year, args.week).main(args.selector)
