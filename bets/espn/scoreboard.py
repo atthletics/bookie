@@ -82,6 +82,10 @@ class Scoreboard():
     def parse_spread_data(self):
         self.spreads = []
         for game in self.game_dat:
+            team_names = game.findAll('span', {'class': 'sb-team-short'})
+            teams = [elem.contents[0] for elem in team_names]
+            teams_str = ' at '.join(teams)
+            log.info('Getting spread for ' + teams_str)
             try:
                 spread_raw = game.find('th', {'class': 'line'}).contents[0]
             except AttributeError:
@@ -96,6 +100,8 @@ class Scoreboard():
                 underdog_id = ids.pop(del_idx)
                 spread = abs(float(spread_split[1]))
             except ValueError:
+                log.info('No spread available: ' + teams_str)
+                spread = 0
                 underdog_id = '-1'
             spreads_dict = {'game_id': game.attrs['id'],
                             'team_id': underdog_id,
