@@ -31,6 +31,9 @@ class URLOpener():
         return(self.soup)
 
 class Scoreboard():
+    '''
+    Pulls games and spreads data from ESPN scoreboard page
+    '''
     def __init__(self, year, week):
         self.year = year
         self.week = week
@@ -66,12 +69,8 @@ class Scoreboard():
                          'game_ts': game_ts_obj.strftime('%Y-%m-%d %H:%M'),
                          'week_id': self.week}
             self.games.append(game_dict)
-        #self.games_data = pd.DataFrame(games)
-        #self.games_data = self.games_data[
-        #    ['game_id', 'home_id', 'away_id', 'game_ts', 'week_id']]
         gd_filneame = '_'.join([str(self.year), str(self.week), '.csv'])
         gd_filepath = '/'.join([fp, 'data/games', gd_filneame])
-        #self.games_data.to_csv(gd_filepath, index=False)
         with open(gd_filepath, 'w') as output:
             dict_writer = csv.DictWriter(output,
                                          self.games[0].keys(),
@@ -92,12 +91,8 @@ class Scoreboard():
                             'espn_short_name': spread_split[0],
                             'spread': spread_split[1]}
             self.spreads.append(spreads_dict)
-        #self.spreads_data = pd.DataFrame(spreads)
-        #self.spreads_data = self.spreads_data[
-        #    ['game_id', 'espn_short_name', 'spread']]
         sd_filename = '_'.join([str(self.year), str(self.week), '.csv'])
         sd_filepath = '/'.join([fp, 'data/spreads', sd_filename])
-        #self.spreads_data.to_csv(sd_filepath, index=False)
         with open(sd_filepath, 'w') as output:
             dict_writer = csv.DictWriter(output,
                                          self.spreads[0].keys(),
