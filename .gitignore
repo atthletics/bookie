@@ -1,4 +1,6 @@
 *.csv
 *.json
 keys.yaml
-__pycache__/*
+*config.yaml
+__pycache__
+geckodriver.log
