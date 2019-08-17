@@ -2,7 +2,7 @@ import os, yaml, csv
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
-from datetime import datetime
+from datetime import datetime, timedelta
 from argparse import ArgumentParser
 import logging as log
 fp = os.path.dirname(os.path.realpath(__file__))
@@ -56,17 +56,21 @@ class Scoreboard():
             time_raw = game.find('span',
                 {'class': 'time', 'data-dateformat':'time1'}).contents[0]
             date_obj = datetime.strptime(date_raw, "%Y-%m-%dT%H:%MZ")
-            time_obj = datetime.strptime(time_raw, '%I:%M %p ET')
-            game_ts_obj = datetime(
-                date_obj.year,
-                date_obj.month,
-                date_obj.day,
-                time_obj.hour,
-                time_obj.minute)
+            #time_obj_etc = datetime.strptime(time_raw, '%I:%M %p ET')
+            #time_obj_utc = time_obj_etc + timedelta(hours=4)
+            #game_ts_obj_utc = datetime(
+            #    date_obj.year,
+            #    date_obj.month,
+            #    date_obj.day,
+            #    time_obj_utc.hour,
+            #    time_obj_utc.minute)
+            #game_ts_obj_et = game_ts_obj_utc - timedelta(hours=4)
+            date_obj_utc = datetime.strptime(date_raw, "%Y-%m-%dT%H:%MZ")
+            date_obj_etc = date_obj_utc - timedelta(hours=4)
             game_dict = {'game_id': game.attrs['id'],
                          'home_id': game.attrs['data-homeid'],
                          'away_id': game.attrs['data-awayid'],
-                         'game_ts': game_ts_obj.strftime('%Y-%m-%d %H:%M'),
+                         'game_ts': date_obj_etc.strftime('%Y-%m-%d %H:%M'),
                          'week_id': self.week}
             self.games.append(game_dict)
         gd_filneame = '_'.join([str(self.year), str(self.week), '.csv'])
@@ -97,7 +101,8 @@ class Scoreboard():
                 short_names = game.findAll('span', {'class': 'sb-team-abbrev'})
                 short_names = [elem.contents[0] for elem in short_names]
                 del_idx = short_names.index(favorite)
-                underdog_id = ids.pop(del_idx)
+                ids.pop(del_idx)
+                underdog_id = ids[0]
                 spread = abs(float(spread_split[1]))
             except ValueError:
                 log.info('No spread available: ' + teams_str)
