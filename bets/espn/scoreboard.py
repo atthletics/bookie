@@ -53,18 +53,6 @@ class Scoreboard():
         self.games = []
         for game in self.game_dat:
             date_raw = game.find('th', {'class': 'date-time'})['data-date']
-            time_raw = game.find('span',
-                {'class': 'time', 'data-dateformat':'time1'}).contents[0]
-            date_obj = datetime.strptime(date_raw, "%Y-%m-%dT%H:%MZ")
-            #time_obj_etc = datetime.strptime(time_raw, '%I:%M %p ET')
-            #time_obj_utc = time_obj_etc + timedelta(hours=4)
-            #game_ts_obj_utc = datetime(
-            #    date_obj.year,
-            #    date_obj.month,
-            #    date_obj.day,
-            #    time_obj_utc.hour,
-            #    time_obj_utc.minute)
-            #game_ts_obj_et = game_ts_obj_utc - timedelta(hours=4)
             date_obj_utc = datetime.strptime(date_raw, "%Y-%m-%dT%H:%MZ")
             date_obj_etc = date_obj_utc - timedelta(hours=4)
             game_dict = {'game_id': game.attrs['id'],
