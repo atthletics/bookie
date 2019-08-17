@@ -38,7 +38,7 @@ class Scoreboard():
         self.year = year
         self.week = week
         with open(fp + '/config.yaml', 'r') as (f):
-            self.espn_config = yaml.load(f, Loader=yaml.FullLoader)
+            self.espn_config = yaml.load(f)
         self.params = {'year': self.year,
                        'week': self.week}
 
