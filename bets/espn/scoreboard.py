@@ -87,9 +87,15 @@ class Scoreboard():
             except AttributeError:
                 spread_raw = 'N/A 0'
             spread_split = str.split(spread_raw, ' ')
+            home_id = game.attrs['data-homeid']
+            away_id = game.attrs['data-awayid']
+            short_names = game.findAll('span', {'class': 'sb-team-abbrev'})
+            short_names = [elem.contents[0] for elem in short_names]
+            underdog = short_names.remove(spread_split[0])[0]
+            spread = abs(float(spread_split[1]))
             spreads_dict = {'game_id': game.attrs['id'],
-                            'espn_short_name': spread_split[0],
-                            'spread': spread_split[1]}
+                            'team_id': underdog,
+                            'spread': spread}
             self.spreads.append(spreads_dict)
         sd_filename = '_'.join([str(self.year), str(self.week), '.csv'])
         sd_filepath = '/'.join([fp, 'data/spreads', sd_filename])
