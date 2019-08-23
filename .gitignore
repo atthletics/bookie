@@ -4,3 +4,4 @@ keys.yaml
 *config.yaml
 __pycache__
 geckodriver.log
+*.html
