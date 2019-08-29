@@ -1,6 +1,7 @@
 import os
 import shutil
 import uuid
+import time
 
 from selenium import webdriver
 from bs4 import BeautifulSoup
@@ -46,6 +47,7 @@ class WebDriverWrapper:
 
     def get_url(self, url):
         self._driver.get(url)
+        time.sleep(10)
 
     def get_soup(self):
         html = self._driver.page_source
