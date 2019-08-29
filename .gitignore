@@ -1,7 +1,5 @@
-*.csv
-*.json
-keys.yaml
-*config.yaml
 __pycache__
-geckodriver.log
-*.html
+bin/chromedriver
+bin/headless-chromium
+build.zip
+*config.yaml

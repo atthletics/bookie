@@ -1,18 +1,23 @@
+import os, yaml
 from webdriver_wrapper import WebDriverWrapper
-from bets.espn import espn_spreads
-from bets.oddsshark import os_spreads
+import espn_spreads
+import os_spreads
+fp = os.path.dirname(os.path.realpath(__file__))
 
 def lambda_handler(*args, **kwargs):
+    with open(fp + '/config.yaml', 'r') as f:
+        config = yaml.load(f)
+
     #ESPN
     driver = WebDriverWrapper()
-    driver.get_url('http://www.espn.com/college-football/scoreboard/_/group/80/year/2019/seasontype/2/week/1')
+    driver.get_url(config['url1'])
     driver.get_soup()
     espn_spreads.Parse(driver.soup)
     driver.close()
 
     #Oddsshark
     driver = WebDriverWrapper()
-    driver.get_url('https://www.oddsshark.com/ncaaf/scores')
+    driver.get_url(config['url2'])
     driver.get_soup()
     os_spreads.Parse(driver.soup)
     driver.close()
