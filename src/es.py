@@ -1,4 +1,5 @@
 import json, time
+from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import boto3
 
@@ -24,8 +25,13 @@ class Game():
     def game(self):
         game_id = {
             'game_status' : self.status_flag,
-            'game_id' : self.game_soup.attrs['id']
+            'game_id'     : self.game_soup.attrs['id']
         }
+        if self.status_flag == 'PREGAME':
+            date_raw = self.game_soup.find('th', {'class': 'date-time'})['data-date']
+            date_obj_utc = datetime.strptime(date_raw, "%Y-%m-%dT%H:%MZ")
+            date_obj_etc = date_obj_utc - timedelta(hours=4)
+            game_id.update({'game_ts' : date_obj_etc.strftime('%Y-%m-%d %H:%M')})
         self.data.update(game_id)
         short_names = self.game_soup.findAll('span', {'class': 'sb-team-abbrev'})
         self.short_names = [elem.contents[0] for elem in short_names]
@@ -50,7 +56,7 @@ class Game():
             favorite_id = self.short_names.index(favorite)
             underdog_idx = abs(favorite_id - 1)
             spreads = {
-                'underdog' : list(self.team_ids.values())[underdog_idx],
+                'underdog_id' : list(self.team_ids.values())[underdog_idx],
                 'spread'   : abs(float(spread_split[1]))
             }
             self.data.update(spreads)
