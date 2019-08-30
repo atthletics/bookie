@@ -29,9 +29,9 @@ class Game():
     def spread(self):
         spreads_raw = self.game_soup.findAll('div', {'class': 'value'})        
         spreads_list = [float(spread.contents[0]) for spread in spreads_raw]
-        underdog_idx = [i for i,spread in enumerate(self.spreads) if spread > 0][0]
+        underdog_idx = [i for i,spread in enumerate(spreads_list) if spread > 0][0]
         spreads = {
-            'underdog' : list(self.teams.values())[underdog_idx]
+            'underdog' : list(self.teams.values())[underdog_idx],
             'spread'   : spreads_list[underdog_idx]
         }
         self.data.update(spreads)
@@ -39,15 +39,15 @@ class Game():
         
     def status(self):
         self.status_flag = self.game_soup.find('div', {'class' : 'status'}).contents[0]
-        if status_flag == 'final':
-            status = {'status': status_flag}
+        if self.status_flag == 'final':
+            status = {'status': self.status_flag}
         else:
             status = {'status': 'pregame'}
         self.data.update(status)
         return(status)
     
     def score(self):
-        score_raw = self.game_soup.findAll('td', {'class' : 'segment'})
+        scores_raw = self.game_soup.findAll('td', {'class' : 'segment'})
         score = {
             'away_score' : int(scores_raw[4].contents[0]),
             'home_score' : int(scores_raw[9].contents[0])
@@ -86,4 +86,3 @@ class ProcessGamesToS3():
         fp_params = {'week_id' : self.week_id, 'ts' : ts}
         s3_fp = 'data/os/week_id={week_id}/{ts}.json'.format(**fp_params)
         self.write_s3(self.games, s3_fp)
-            
