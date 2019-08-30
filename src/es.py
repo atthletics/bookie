@@ -20,7 +20,15 @@ class Game():
         ]
         self.data = dict.fromkeys(keys)
         self.main()
-        
+
+    def game(self):
+        game_id = {'game_id' : self.game_soup.attrs['id']}
+        self.data.update(game_id)
+        short_names = self.game_soup.findAll('span', {'class': 'sb-team-abbrev'})
+        self.short_names = [elem.contents[0] for elem in short_names]
+        self.short_names_str = ' at '.join(self.short_names)
+        return(self.short_names_str)
+            
     def teams(self):
         teams_raw = [
             self.game_soup.attrs['data-awayid'],
@@ -35,21 +43,20 @@ class Game():
         spread_raw = self.game_soup.find('th', {'class': 'line'}).contents[0]
         spread_split = str.split(spread_raw, ' ')
         favorite = spread_split[0]
-        short_names = game_soup.findAll('span', {'class': 'sb-team-abbrev'})
-        short_names = [elem.contents[0] for elem in short_names]
-        favorite_id = short_names.index(favorite)
-        underdog_idx = abs(favorite_id -1)
+        favorite_id = self.short_names.index(favorite)
+        underdog_idx = abs(favorite_id - 1)
         spreads = {
-            'underdog' : self.team_ids[underdog_idx],
+            'underdog' : list(self.team_ids.values())[underdog_idx],
             'spread'   : abs(float(spread_split[1]))
         }
         self.data.update(spreads)
     
     def main(self):
+        self.game()
         self.teams()
         self.spread()
 
-def ProcessGamesToS3():
+class ProcessGamesToS3():
     def __init__(self, soup, week_id):
         self.soup = soup
         self.week_id = week_id
@@ -68,9 +75,13 @@ def ProcessGamesToS3():
         ts = time.strftime("%Y-%m-%dT%H:%M:%S")        
         self.games = []
         for game_soup in self.games_soup:
-            game_obj = Game(game_soup)
-            self.games.append(game_obj.data)
+            try:
+                game_obj = Game(game_soup)
+                print('Processing: ' + game_obj.short_names_str)
+                self.games.append(game_obj.data)
+            except AttributeError:
+                print('ERROR: ' + game_obj.short_names_str)
         fp_params = {'week_id' : self.week_id, 'ts' : ts}
         s3_fp = 'data/es/week_id={week_id}/{ts}.json'.format(**fp_params)
         self.write_s3(self.games, s3_fp)
-        
+ 
