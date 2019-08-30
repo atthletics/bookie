@@ -32,22 +32,18 @@ class Game():
         return(self.team_ids)
 
     def spread(self):
-        try:
-            spread_raw = self.game_soup.find('th', {'class': 'line'}).contents[0]
-            spread_split = str.split(spread_raw, ' ')
-            favorite = spread_split[0]
-            short_names = game_soup.findAll('span', {'class': 'sb-team-abbrev'})
-            short_names = [elem.contents[0] for elem in short_names]
-            favorite_id = short_names.index(favorite)
-            underdog_idx = abs(favorite_id -1)
-            spreads = {
-                'underdog' : self.team_ids[underdog_idx],
-                'spread'   : abs(float(spread_split[1]))
-            }
-            self.data.update(spreads)
-        except AttributeError:
-            print('No Spread Available: ' + ' vs '.join(short_names))
-            continue
+        spread_raw = self.game_soup.find('th', {'class': 'line'}).contents[0]
+        spread_split = str.split(spread_raw, ' ')
+        favorite = spread_split[0]
+        short_names = game_soup.findAll('span', {'class': 'sb-team-abbrev'})
+        short_names = [elem.contents[0] for elem in short_names]
+        favorite_id = short_names.index(favorite)
+        underdog_idx = abs(favorite_id -1)
+        spreads = {
+            'underdog' : self.team_ids[underdog_idx],
+            'spread'   : abs(float(spread_split[1]))
+        }
+        self.data.update(spreads)
     
     def main(self):
         self.teams()
