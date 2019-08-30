@@ -3,8 +3,9 @@ from bs4 import BeautifulSoup
 import boto3
 
 class Game():
-    def __init__(self, game_soup):
+    def __init__(self, game_soup, status_flag):
         self.game_soup = game_soup
+        self.status_flag = status_flag
         keys = [
             'game_status',
             'game_ts',
@@ -15,14 +16,16 @@ class Game():
             'spread',
             'away_score',
             'home_score',
-            'winner',
-            'is_upset'
+            'winner'
         ]
         self.data = dict.fromkeys(keys)
         self.main()
 
     def game(self):
-        game_id = {'game_id' : self.game_soup.attrs['id']}
+        game_id = {
+            'game_status' : self.status_flag,
+            'game_id' : self.game_soup.attrs['id']
+        }
         self.data.update(game_id)
         short_names = self.game_soup.findAll('span', {'class': 'sb-team-abbrev'})
         self.short_names = [elem.contents[0] for elem in short_names]
@@ -40,28 +43,53 @@ class Game():
         return(self.team_ids)
 
     def spread(self):
-        spread_raw = self.game_soup.find('th', {'class': 'line'}).contents[0]
-        spread_split = str.split(spread_raw, ' ')
-        favorite = spread_split[0]
-        favorite_id = self.short_names.index(favorite)
-        underdog_idx = abs(favorite_id - 1)
-        spreads = {
-            'underdog' : list(self.team_ids.values())[underdog_idx],
-            'spread'   : abs(float(spread_split[1]))
+        try:
+            spread_raw = self.game_soup.find('th', {'class': 'line'}).contents[0]
+            spread_split = str.split(spread_raw, ' ')
+            favorite = spread_split[0]
+            favorite_id = self.short_names.index(favorite)
+            underdog_idx = abs(favorite_id - 1)
+            spreads = {
+                'underdog' : list(self.team_ids.values())[underdog_idx],
+                'spread'   : abs(float(spread_split[1]))
+            }
+            self.data.update(spreads)
+        except AttributeError:
+            pass
+    
+    def score(self):
+        scores_raw = self.game_soup.findAll('td', {'class' : 'total'})
+        if self.status_flag == 'AWAY_WIN':
+            winner = self.data['away_team_id']
+        elif self.status_flag == 'HOME_WIN':
+            winner = self.data['home_team_id']
+        else:
+            winner = None
+        score = {
+            'away_score' : int(scores_raw[0].find('span').contents[0]),
+            'home_score' : int(scores_raw[1].find('span').contents[0]),
+            'winner'     : winner
         }
-        self.data.update(spreads)
+        self.data.update(score)
     
     def main(self):
         self.game()
         self.teams()
-        self.spread()
+        if self.status_flag == 'PREGAME':
+            self.spread()
+        else:
+            self.score()
 
 class ProcessGamesToS3():
     def __init__(self, soup, week_id):
         self.soup = soup
         self.week_id = week_id
-        self.games_soup = self.soup.findAll("article",
+        self.pregames_soup = self.soup.findAll("article",
             {"class": "scoreboard football pregame js-show"})
+        self.away_winners_soup = self.soup.findAll('article', 
+            {'class': 'scoreboard football final away-winner js-show'})
+        self.home_winners_soup = self.soup.findAll('article', 
+            {'class': 'scoreboard football final home-winner js-show'})
         self.main()        
  
     def write_s3(self, dictionary, filepath):
@@ -71,17 +99,20 @@ class ProcessGamesToS3():
             Body = (bytes(json.dumps(dictionary, indent=4).encode('UTF-8')))
         )
 
+    def process(self, games_soup, status_flag):
+        games = []
+        for game_soup in games_soup:
+            game_obj = Game(game_soup, status_flag)
+            print(status_flag + ' Processing: ' + game_obj.short_names_str)
+            games.append(game_obj.data)
+        return(games)
+
     def main(self):
         ts = time.strftime("%Y-%m-%dT%H:%M:%S")        
-        self.games = []
-        for game_soup in self.games_soup:
-            try:
-                game_obj = Game(game_soup)
-                print('Processing: ' + game_obj.short_names_str)
-                self.games.append(game_obj.data)
-            except AttributeError:
-                print('ERROR: ' + game_obj.short_names_str)
+        pregames = self.process(self.pregames_soup, 'PREGAME')
+        away_winners = self.process(self.away_winners_soup, 'AWAY_WIN')
+        home_winners = self.process(self.home_winners_soup, 'HOME_WIN')
+        self.games = pregames + away_winners + home_winners
         fp_params = {'week_id' : self.week_id, 'ts' : ts}
         s3_fp = 'data/es/week_id={week_id}/{ts}.json'.format(**fp_params)
         self.write_s3(self.games, s3_fp)
- 
