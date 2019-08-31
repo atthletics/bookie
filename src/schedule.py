@@ -16,7 +16,6 @@ def check_dt(dt, start_dt, end_dt):
 
 def get_week_urls():
     dt = datetime.today()
-    weeks = list(schedule.items())
     for week_id, data in schedule.items():
         start_dt = str_to_dt(data['start'])
         end_dt = str_to_dt(data['end'])
