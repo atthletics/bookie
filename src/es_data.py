@@ -13,7 +13,7 @@ class Game():
             'game_id',
             'away_team_id',
             'home_team_id',
-            'underdog_id', 
+            'underdog_id',
             'spread',
             'away_score',
             'home_score',
@@ -37,7 +37,7 @@ class Game():
         self.short_names = [elem.contents[0] for elem in short_names]
         self.short_names_str = ' at '.join(self.short_names)
         return(self.short_names_str)
-            
+
     def teams(self):
         teams_raw = [
             self.game_soup.attrs['data-awayid'],
@@ -62,7 +62,7 @@ class Game():
             self.data.update(spreads)
         except AttributeError:
             pass
-    
+
     def score(self):
         scores_raw = self.game_soup.findAll('td', {'class' : 'total'})
         if self.status_flag == 'AWAY_WIN':
@@ -77,7 +77,7 @@ class Game():
             'winner'     : winner
         }
         self.data.update(score)
-    
+
     def main(self):
         self.game()
         self.teams()
@@ -92,12 +92,12 @@ class ProcessGamesToS3():
         self.week_id = week_id
         self.pregames_soup = self.soup.findAll("article",
             {"class": "scoreboard football pregame js-show"})
-        self.away_winners_soup = self.soup.findAll('article', 
+        self.away_winners_soup = self.soup.findAll('article',
             {'class': 'scoreboard football final away-winner js-show'})
-        self.home_winners_soup = self.soup.findAll('article', 
+        self.home_winners_soup = self.soup.findAll('article',
             {'class': 'scoreboard football final home-winner js-show'})
-        self.main()        
- 
+        self.main()
+
     def write_s3(self, dictionary, filepath):
         s3 = boto3.resource('s3')
         s3object = s3.Object('atthletics', filepath)
@@ -114,7 +114,7 @@ class ProcessGamesToS3():
         return(games)
 
     def main(self):
-        ts = time.strftime("%Y-%m-%dT%H:%M:%S")        
+        ts = time.strftime("%Y-%m-%dT%H:%M:%S")     
         pregames = self.process(self.pregames_soup, 'PREGAME')
         away_winners = self.process(self.away_winners_soup, 'AWAY_WIN')
         home_winners = self.process(self.home_winners_soup, 'HOME_WIN')
