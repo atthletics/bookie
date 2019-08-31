@@ -68,9 +68,11 @@ class Game():
             self.score()
 
 class ProcessGamesToS3():
-    def __init__(self, soup, week_id):
+    def __init__(self, soup):
         self.soup = soup
-        self.week_id = week_id
+        week_str = self.soup.find('div', {'class': 'header-text'}).contents[0]
+        week_list = week_str.replace(',', '').split()
+        self.week_id = int(week_list[1])
         games_pre = self.soup.findAll("div", {"class": "matchup pre"})
         games_final = self.soup.findAll("div", {"class": "matchup final"})
         self.games_soup = games_pre + games_final

@@ -1,21 +1,17 @@
-import os, yaml
 from webdriver_wrapper import WebDriverWrapper
-import es_data
-import os_data
-fp = os.path.dirname(os.path.realpath(__file__))
+import schedule, es_data, os_data
+
+week_id, week_data = schedule.get_week_urls()
 
 def lambda_handler(*args, **kwargs):
-    with open(fp + '/config.yaml', 'r') as f:
-        config = yaml.load(f)
-
     driver = WebDriverWrapper()
-    driver.get_url(config['url1'])
+    driver.get_url(week_data['es_url'])
     driver.get_soup()
-    es_data.ProcessGamesToS3(driver.soup, 1)
+    es_data.ProcessGamesToS3(driver.soup, week_id)
     driver.close()
 
     driver = WebDriverWrapper()
-    driver.get_url(config['url2'])
+    driver.get_url(week_data['os_url'])
     driver.get_soup()
-    os_data.ProcessGamesToS3(driver.soup, 1)
+    os_data.ProcessGamesToS3(driver.soup)
     driver.close()

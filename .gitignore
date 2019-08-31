@@ -2,4 +2,4 @@ __pycache__
 bin/chromedriver
 bin/headless-chromium
 build.zip
-*config.yaml
+*schedule.yaml
