@@ -92,6 +92,8 @@ class ProcessGamesToS3():
         self.week_id = week_id
         self.pregames_soup = self.soup.findAll("article",
             {"class": "scoreboard football pregame js-show"})
+        #self.live_soup = self.soup.findAll("article",
+        #    {"class": "scoreboard football live"})
         self.away_winners_soup = self.soup.findAll('article',
             {'class': 'scoreboard football final away-winner js-show'})
         self.home_winners_soup = self.soup.findAll('article',
@@ -114,7 +116,7 @@ class ProcessGamesToS3():
         return(games)
 
     def main(self):
-        ts = time.strftime("%Y-%m-%dT%H:%M:%S")     
+        ts = time.strftime("%Y-%m-%dT%H:%M:%S")
         pregames = self.process(self.pregames_soup, 'PREGAME')
         away_winners = self.process(self.away_winners_soup, 'AWAY_WIN')
         home_winners = self.process(self.home_winners_soup, 'HOME_WIN')
