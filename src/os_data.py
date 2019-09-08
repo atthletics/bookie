@@ -1,5 +1,9 @@
 import time, boto3, json
 from bs4 import BeautifulSoup
+import logging as log
+log.basicConfig(format='OS | %(asctime)s | %(levelname)s | %(message)s',
+                datefmt='%m/%d/%Y %I:%M:%S %p',
+                level=log.INFO)
 
 class Game():
     def __init__(self, game_soup):
@@ -22,16 +26,23 @@ class Game():
         teams_raw = self.game_soup.findAll('div', {'class': 'team-header', 'class': 'city'})
         team_keys = ['away_team', 'home_team']
         self.teams = {key: team_raw.contents[0] for key, team_raw in zip(team_keys, teams_raw)}
+        self.matchup_str = self.teams['away_team'] + ' vs ' + self.teams['home_team']
         self.data.update(self.teams)
         return(self.teams)
 
     def spread(self):
         spreads_raw = self.game_soup.findAll('div', {'class': 'value'})
-        spreads_list = [float(spread.contents[0]) for spread in spreads_raw]
-        underdog_idx = [i for i,spread in enumerate(spreads_list) if spread > 0][0]
+        spreads_list = [spread.contents[0] for spread in spreads_raw]
+        try:
+            underdog_idx = [i for i,spread in enumerate(spreads_list) if float(spread) > 0][0]
+            underdog = list(self.teams.values())[underdog_idx]
+            spread = float(spreads_list[underdog_idx])
+        except ValueError:
+            underdog = 'N/A'
+            spread = 0
         spreads = {
-            'underdog' : list(self.teams.values())[underdog_idx],
-            'spread'   : spreads_list[underdog_idx]
+            'underdog' : underdog,
+            'spread'   : spread
         }
         self.data.update(spreads)
         return(spreads)
@@ -90,6 +101,7 @@ class ProcessGamesToS3():
         self.games = []
         for game_soup in self.games_soup:
             game_obj = Game(game_soup)
+            log.info('Processing: ' + game_obj.matchup_str)
             self.games.append(game_obj.data)
         fp_params = {'week_id' : self.week_id, 'ts' : ts}
         s3_fp = 'data/os/week_id={week_id}/{ts}.json'.format(**fp_params)

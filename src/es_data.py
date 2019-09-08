@@ -2,6 +2,10 @@ import json, time
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import boto3
+import logging as log
+log.basicConfig(format='ES | %(asctime)s | %(levelname)s | %(message)s',
+                datefmt='%m/%d/%Y %I:%M:%S %p',
+                level=log.INFO)
 
 class Game():
     def __init__(self, game_soup, status_flag):
@@ -61,6 +65,7 @@ class Game():
             }
             self.data.update(spreads)
         except AttributeError:
+            log.warning('No spread available')
             pass
 
     def score(self):
@@ -91,13 +96,13 @@ class ProcessGamesToS3():
         self.soup = soup
         self.week_id = week_id
         self.pregames_soup = self.soup.findAll("article",
-            {"class": "scoreboard football pregame js-show"})
-        #self.live_soup = self.soup.findAll("article",
-        #    {"class": "scoreboard football live"})
+                {"class": "scoreboard football pregame js-show"})
+        self.inprogress_soup = self.soup.findAll("article",
+                {"class": "scoreboard football live"})
         self.away_winners_soup = self.soup.findAll('article',
-            {'class': 'scoreboard football final away-winner js-show'})
+                {'class': 'scoreboard football final away-winner js-show'})
         self.home_winners_soup = self.soup.findAll('article',
-            {'class': 'scoreboard football final home-winner js-show'})
+                {'class': 'scoreboard football final home-winner js-show'})
         self.main()
 
     def write_s3(self, dictionary, filepath):
@@ -111,16 +116,17 @@ class ProcessGamesToS3():
         games = []
         for game_soup in games_soup:
             game_obj = Game(game_soup, status_flag)
-            print(status_flag + ' Processing: ' + game_obj.short_names_str)
+            log.info(status_flag + ' Processing: ' + game_obj.short_names_str)
             games.append(game_obj.data)
         return(games)
 
     def main(self):
         ts = time.strftime("%Y-%m-%dT%H:%M:%S")
         pregames = self.process(self.pregames_soup, 'PREGAME')
+        inprogress = self.process(self.inprogress_soup, 'INPROGRESS')
         away_winners = self.process(self.away_winners_soup, 'AWAY_WIN')
         home_winners = self.process(self.home_winners_soup, 'HOME_WIN')
-        self.games = pregames + away_winners + home_winners
+        self.games = pregames + inprogress + away_winners + home_winners
         fp_params = {'week_id' : self.week_id, 'ts' : ts}
         s3_fp = 'data/es/week_id={week_id}/{ts}.json'.format(**fp_params)
         self.write_s3(self.games, s3_fp)
