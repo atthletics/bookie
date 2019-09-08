@@ -98,7 +98,7 @@ class ProcessGamesToS3():
         self.pregames_soup = self.soup.findAll("article",
                 {"class": "scoreboard football pregame js-show"})
         self.inprogress_soup = self.soup.findAll("article",
-                {"class": "scoreboard football live"})
+                {"class": "scoreboard football live js-show"})
         self.away_winners_soup = self.soup.findAll('article',
                 {'class': 'scoreboard football final away-winner js-show'})
         self.home_winners_soup = self.soup.findAll('article',
